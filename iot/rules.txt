@@ -1,0 +1,88 @@
+for r in $(aws iot list-topic-rules |grep -i chat|grep ruleName|cut -c 26-|sed 's/.$//'); do aws iot get-topic-rule --rule-name $r; done > rules.txt
+
+{
+    "ruleArn": "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:rule/chatStreamRule",
+    "rule": {
+        "awsIotSqlVersion": "2016-03-23",
+        "sql": "SELECT *, clientId() AS clientId, timestamp() AS timestamp FROM 'chat/stream'",
+        "ruleDisabled": false,
+        "actions": [
+            {
+                "kinesis": {
+                    "roleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/service-role/chatStreamRole",
+                    "streamName": "chat",
+                    "partitionKey": "${topic()}"
+                }
+            }
+        ],
+        "ruleName": "chatStreamRule"
+    }
+}
+{
+    "ruleArn": "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:rule/chatRule",
+    "rule": {
+        "awsIotSqlVersion": "2016-03-23",
+        "sql": "SELECT *, clientId() AS clientId, timestamp() AS timestamp FROM 'chat/out'",
+        "ruleDisabled": false,
+        "actions": [
+            {
+                "lambda": {
+                    "functionArn": "arn:aws:lambda:<AWS_REGION>:<AWS_ACCOUNT_ID>:function:chat"
+                }
+            }
+        ],
+        "ruleName": "chatRule"
+    }
+}
+{
+    "ruleArn": "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:rule/chatPubRule",
+    "rule": {
+        "awsIotSqlVersion": "2016-03-23",
+        "sql": "SELECT *, clientId() AS clientId, timestamp() AS timestamp FROM 'chat/out' WHERE NOT isUndefined(message) AND NOT isUndefined(room)",
+        "ruleDisabled": false,
+        "actions": [
+            {
+                "republish": {
+                    "topic": "chat/pub${room}",
+                    "roleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/service-role/aws_iot_republish"
+                }
+            }
+        ],
+        "ruleName": "chatPubRule"
+    }
+}
+{
+    "ruleArn": "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:rule/chatPresenceRule",
+    "rule": {
+        "awsIotSqlVersion": "2016-03-23",
+        "sql": "SELECT * FROM '$aws/events/presence/#'",
+        "ruleDisabled": false,
+        "actions": [
+            {
+                "lambda": {
+                    "functionArn": "arn:aws:lambda:<AWS_REGION>:<AWS_ACCOUNT_ID>:function:chat"
+                }
+            }
+        ],
+        "ruleName": "chatPresenceRule"
+    }
+}
+{
+    "ruleArn": "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:rule/chatStore",
+    "rule": {
+        "awsIotSqlVersion": "2016-03-23",
+        "sql": "SELECT *, concat(timestamp, clientId) AS timestamp_clientId, round(timestamp / 1000) + 86400 AS ttl FROM 'chat/pub/#'",
+        "ruleDisabled": false,
+        "actions": [
+            {
+                "dynamoDBv2": {
+                    "putItem": {
+                        "tableName": "chat"
+                    },
+                    "roleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/aws_iot_dynamoDB"
+                }
+            }
+        ],
+        "ruleName": "chatStore"
+    }
+}

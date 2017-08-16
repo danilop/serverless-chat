@@ -1,0 +1,38 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  chat:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: .
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Role: 'arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda_chat'
+      Events:
+        IoTRule1:
+          Type: IoTRule
+          Properties:
+            Sql: >-
+              SELECT *, clientId() AS clientId, timestamp() AS timestamp FROM
+              'chat/out'
+        IoTRule2:
+          Type: IoTRule
+          Properties:
+            Sql: 'SELECT * FROM ''$aws/events/presence/#'''
+        Kinesis1:
+          Type: Kinesis
+          Properties:
+            Stream:
+              'Fn::GetAtt':
+                - KinesisStream1
+                - Arn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 100
+  KinesisStream1:
+    Type: 'AWS::Kinesis::Stream'
+    Properties:
+      ShardCount: 1

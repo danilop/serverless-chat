@@ -1,0 +1,46 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iot:Connect"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iot:Publish"
+            ],
+            "Resource": [
+                "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:topic/chat/in/*",
+                "arn:aws:iot:<AWS_REGION>:<AWS_ACCOUNT_ID>:topic/chat/pub/*"
+            ]
+        },
+        {
+            "Sid": "Stmt1500489818000",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:Query"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:<AWS_REGION>:<AWS_ACCOUNT_ID>:table/chat"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kinesis:DescribeStream",
+                "kinesis:GetShardIterator",
+                "kinesis:GetRecords",
+                "kinesis:ListStreams"
+            ],
+            "Resource": [
+                "arn:aws:kinesis:<AWS_REGION>:<AWS_ACCOUNT_ID>:stream/chat"
+            ]
+        }
+    ]
+}

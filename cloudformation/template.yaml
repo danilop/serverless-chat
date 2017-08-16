@@ -1,13 +1,13 @@
-﻿AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Description: An AWS Serverless Specification template describing your function.
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless Web Chat
 Resources:
-  chat:
+  chat-function:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.handler
       Runtime: nodejs6.10
-      CodeUri: .
+      CodeUri: ./fn/
       Description: ''
       MemorySize: 128
       Timeout: 3
@@ -36,3 +36,9 @@ Resources:
     Type: 'AWS::Kinesis::Stream'
     Properties:
       ShardCount: 1
+  Type: "AWS::IAM::Role"
+    Properties:
+      Policies:
+        PolicyName:
+        PolicyDocument:
+      RoleName: chat-function-role

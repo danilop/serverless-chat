@@ -5,7 +5,7 @@ console.log('Loading function');
 const APP_NAME = 'chat';
 const DB_TABLE = 'chat';
 const WINDOW_TITLE = 'Chat';
-const AWS_IOT_ENDPOINT = '<AWS_IOT_ENDPOINT>';
+const AWS_IOT_ENDPOINT = process.env.AWS_IOT_ENDPOINT;
 
 const AWS = require('aws-sdk');
 const iotdata = new AWS.IotData({endpoint: AWS_IOT_ENDPOINT});

@@ -10,7 +10,7 @@ S3_BUCKET=${3:?Usage: deploy.sh <stack_name> <aws_region> <s3_bucket>}
 mkdir -p tmp
 
 echo Fetching IoT endpoint URL
-AWS_IOT_ENDPOINT=`aws iot describe-endpoint --region eu-west-1 | perl -lne 'print $1 if /"endpointAddress": "([^"]+)"/'`
+AWS_IOT_ENDPOINT=`aws iot describe-endpoint --region ${AWS_REGION} | perl -lne 'print $1 if /"endpointAddress": "([^"]+)"/'`
 
 echo Checking S3 bucket
 if ! aws s3 ls s3://${S3_BUCKET} >/dev/null; then

@@ -104,7 +104,9 @@ function initClient(requestUrl, clientId) {
       // Only eval messages coming from the "in" topic
       eval(payload.run);
       run(payload);
-    } else if ('onMessageArrived' in store) {
+    }
+    else if ('onMessageArrived' in store) {
+      translation = translateInput(payload.message.text, payload.message.timestamp);
       store.onMessageArrived(message.destinationName, payload);
     } else {
       console.log('ignored: ' + message.destinationName + " -> " + message.payloadString);
@@ -128,6 +130,47 @@ function connectClient() {
   });
 }
 
+function translateInput(text, id) {
+  //var source_language = document.getElementById('source_lang');
+  var source_language = 'auto'
+  var target_language = document.getElementById('target_lang');
+  var target_language = target_language.options[target_language.selectedIndex].value
+  var translate = new AWS.Translate();
+  var params = {
+    SourceLanguageCode: source_language,
+    TargetLanguageCode: target_language,
+    Text: text
+  };
+  translate.translateText(params, function (err, data) {
+    if (err) {
+      console.log(err, err.stack);
+      textBox = document.getElementById(id);
+      textBox.classList.add('badge');
+      textBox.classList.add('badge-warning');
+      textBox.classList.add('f-100');
+      textBox.innerText = textBox.innerText + ' (Translate Error)'
+    }
+    else {
+      console.log(data);
+      var storeText = {sourceLanguage: data.SourceLanguageCode, sourceText: text, targetLanguage: target_language, translatedText: data.TranslatedText}
+      localStorage.setItem('translatesCache.' + id, JSON.stringify(storeText));
+      $.each(localStorage, function(key, value){
+        if (key.substring(0,15) == 'translatesCache') {
+          values = JSON.parse(value);
+          strId = key.substring(16);
+          textBox = document.getElementById(strId);
+          if (values['sourceLanguage'] != values['targetLanguage']) textBox.innerHTML = values['translatedText'] + ' <span class="light">(' + textBox.innerText + ')</span>';
+        }
+      });
+      }
+    callScroll();
+  });
+}
+
+function callScroll() {
+  $('#messages').scrollTop($('#messages')[0].scrollHeight - $('#messages')[0].clientHeight);
+}
+
 function init() {
 
   // Initialize the Amazon Cognito credentials provider
@@ -136,7 +179,9 @@ function init() {
   AWS.config.credentials = new AWS.CognitoIdentityCredentials({
     IdentityPoolId: AWS_IDENTITY_POOL_ID,
   });
-
+  var userName = localStorage[window.location.pathname];
+  localStorage.clear();
+  if (userName) localStorage[window.location.pathname] = userName;
   connectClient();
 
 }

@@ -45,8 +45,8 @@ Resources:
           AttributeName: timestamp
           KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
       TableName: chat
       TimeToLiveSpecification:
         AttributeName: ttl
@@ -239,6 +239,12 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/chat/in/*'
                   - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/chat/pub/*'
+              -
+                Action:
+                  - translate:TranslateText
+                  - comprehend:DetectDominantLanguage
+                Effect: Allow
+                Resource: ['*']
 # Uncomment to enable Kinesis
 #  ChatStream:
 #    Type: AWS::Kinesis::Stream

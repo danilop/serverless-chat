@@ -15,36 +15,55 @@ const htmlPage = `
 <html>
 
 <head>
-  <title>Chat</title>
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.85.0.min.js"></script>
+  <title>Babel Chat</title>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.340.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link rel="stylesheet" href="/custom.css">
 </head>
 
 <body>
-  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
   <script src="/index.js"></script>
-  <div id='container'>%CONTENT%</div>
+  <div id="container" class="container-fluid">%CONTENT%</div>
 </body>
 
 </html>
 `;
 
 const htmlContent = `
-<div id="messages" class="col-xs-12"></div>
-<div id="prompt" class="col-xs-12">
+<div id="messages" class="col-sm-12" style="max-height: 70%; overflow: auto;"></div>
+<div id="prompt" class="col-sm-12">
     <form role="form" id="lineForm" class="form-horizontal">
-        <div class="form-group">
-            <div class="col-xs-2">
-                <input type="text" class="form-control" id="user" placeholder="Your name">
+            <div class="form-row">
+                <div id="translateBox" class="col-sm-12 mb-2 alert alert-primary">
+                  Translate to:
+                  <select id="target_lang" class="custom-select">
+                    <option value="en">🇬🇧</option>
+                    <option value="fr">🇫🇷</option>
+                    <option value="de">🇩🇪</option>
+                    <option value="it">🇮🇹</option>
+                    <option value="pt">🇵🇹</option>
+                    <option value="es">🇪🇸</option>
+                    <option value="ru">🇷🇺</option>
+                    <option value="he">🇮🇱</option>
+                    <option value="zh">🇨🇳</option>
+                    <option value="ja">🇯🇵</option>
+                  </select>
+                </div>
             </div>
-            <div class="col-xs-8">
-                <input type="text" class="form-control" id="line" placeholder="Your message...">
-            </div>
-            <div class="col-xs-2">
-                <button type="submit" class="btn btn-default" id="submitButton">Send</button>
+            <div class="form-row align-items-center">
+                    <div class="col-sm-2">
+                      <input type="text" class="form-control mb-1" id="user" placeholder="Your name">
+                    </div>
+                    <div class="col-sm-8">
+                      <input type="text" class="form-control mb-1" id="line" placeholder="Your message...">
+                    </div>
+                    <div class="col-sm-2">
+                      <button type="submit" class="btn btn-primary mb-1" id="submitButton">Send</button>
+                    </div>
             </div>
         </div>
     </form>
@@ -141,15 +160,15 @@ function clientConnected(data) {
         store.renderMessages = function() {
             var html = '';
             store.messages.forEach((m) => {
+                console.log(m);
                 var displayText = store.replaceURLWithHTMLLinks(store.htmlEntities(m.text));
                 if ('user' in m) {
-                    html += '<p><strong>' + m.user + '</strong>: ' + displayText + '</p>';
+                    html += '<p><strong>' + m.user + '</strong>: <span id="' + m.timestamp + '">' + displayText + '</span></p>';
                 } else {
-                    html += '<div class="page-header"><h1>' + displayText + '</h1></div>';
+                    html += '<div class="page-header"><h3>' + displayText + '</h3></div>';
                 }
             });
             document.getElementById('messages').innerHTML = html;
-            window.scrollTo(0,document.body.scrollHeight);
         };
         store.sendMessage = function(msg) {
             var mqttMsg = new Paho.MQTT.Message(JSON.stringify(msg));
@@ -172,9 +191,12 @@ function clientConnected(data) {
             evt.preventDefault();
             var user = document.getElementById('user');
             var line = document.getElementById('line');
+            //var source_language = document.getElementById('source_lang');
+            var target_language = document.getElementById('target_lang');
+            var timestamp_date = Date.now();
             if (user.value !== '' && line.value !== '') {
                 localStorage.setItem(store.room, JSON.stringify({ user: user.value }));
-                store.sendMessage({ room: store.room, message: { user: user.value, text: line.value }});
+                store.sendMessage({ room: store.room, message: { user: user.value, text: line.value, source_lang: 'en', timestamp: timestamp_date}});
                 line.value = '';
             }
         });
@@ -220,8 +242,8 @@ function processHttpRequest(req, callback) {
             "Content-Type": "text/html"
         },
         body: htmlPage.replace("%CONTENT%",
-            '<div id="messages" class="col-xs-12"><div class="page-header"><h1>Loading chat room ' +
-            req.path + ' ...</h1></div></div>'
+            '<div id="messages" class="col-xs-12"><div class="page-header"><h3>Loading chat room ' +
+            req.path + ' ...</h3></div></div>'
         )
     };
     console.log("response: " + JSON.stringify(response));
